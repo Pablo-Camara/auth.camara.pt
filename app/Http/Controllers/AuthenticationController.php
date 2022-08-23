@@ -33,6 +33,7 @@ class AuthenticationController extends Controller
 
         //TODO: pass (array)abilities in 2nd param
         //TODO: pass (DateTimeInterface)expiresAt in 3rd param
+        //TODO: on Success, set encrypted cookie with the token, send back 'success'
         return $user->createToken($request->device_name)->plainTextToken;
     }
 }
