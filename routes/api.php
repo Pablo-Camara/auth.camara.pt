@@ -19,4 +19,11 @@ use App\Http\Controllers\AuthenticationController;
     return $request->user();
 });*/
 
-Route::post('/login', [AuthenticationController::class, 'loginAttempt']);
+
+
+Route::get('/authenticate', [AuthenticationController::class, 'authenticationAttempt']);
+
+
+Route::post('/login', [AuthenticationController::class, 'loginAttempt'])
+        ->middleware(['auth:sanctum', 'abilities:guest'])
+        ->name('login-attempt');

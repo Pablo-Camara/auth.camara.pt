@@ -32,8 +32,30 @@ return [
     */
 
     'lifetime' => env('SESSION_LIFETIME', 120),
-
     'expire_on_close' => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auth Token Cookie Name
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the name that you wish for the auth token cookie
+    |
+    */
+    'auth_token_cookie_name' => env('AUTH_TOKEN_COOKIE_NAME', 'ATCN'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auth Token Cookie Lifetime
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the number of minutes that you wish the auth token cookie
+    | to be allowed to remain idle before it expires.
+    |
+    | default: 24*60 = 1440 = 24h in minutes
+    */
+    'auth_token_cookie_lifetime' => env('AUTH_TOKEN_COOKIE_LIFETIME', 1440),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -168,7 +190,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', false),
 
     /*
     |--------------------------------------------------------------------------

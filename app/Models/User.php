@@ -41,4 +41,30 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+
+    /**
+     * Get all the user abilities
+     */
+    public function abilities()
+    {
+        return $this->belongsToMany(
+            Ability::class,
+            'user_abilities'
+        );
+    }
+
+
+    /**
+     * Get all the user guest users (assigned user before login)
+     */
+    public function guestUsers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_guest_users',
+            'user_id',
+            'guest_user_id'
+        );
+    }
 }

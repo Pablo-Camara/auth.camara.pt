@@ -13,14 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('abilities', function (Blueprint $table) {
             $table->id();
-            $table->boolean('guest')->default(1);
-            $table->string('name')->nullable();
-            $table->string('email')->unique()->nullable();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable();
-            $table->rememberToken();
+            $table->string('name', 255);
             $table->timestamp('created_at')->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
@@ -33,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('abilities');
     }
 };
