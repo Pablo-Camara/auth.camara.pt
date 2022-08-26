@@ -1,64 +1,68 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# AuthServer
+## API Specifications
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
 
-## About Laravel
+### Authenticating the User
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+First thing you should do is authenticating the user.
+You MUST send a POST request to /api/authenticate,
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+if the user is not yet authenticated , that request will create
+a new Guest User, and a Guest Token returned in the response.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+if the user is already authenticated, there will be an encrypted cookie
+set with an array containing the 'at' (auth token), the user_id and 
+and a 'guest' flag to tell if the user is logged in or not.
 
-## Learning Laravel
+/api/authenticate will return a json with the 'at' (auth token),
+this auth token must be stored on the client side for any subsequent
+requests to this or other services.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+example response:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```
+{"at":"25|uHHmnjkwrBvIMhOCJmnxxWAdK9tqh9kteP6KlJeu"}
+```
 
-## Laravel Sponsors
+this auth token expires in 24 hours, after it expires the user will have to
+get another guest user token, or login to get a logged in token (with potentially more abilities).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+this token should be sent in the Authorization header:
 
-### Premium Partners
+example:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+Authorization: Bearer 25|uHHmnjkwrBvIMhOCJmnxxWAdK9tqh9kteP6KlJeu
 
-## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-## Code of Conduct
+### Login User
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+To login an user, you must send a POST request to
 
-## Security Vulnerabilities
+/api/login
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+with the following params:
+ - email 
+ - password
 
-## License
+and you MUST send the 'at' (auth token) that you received from /api/authenticate
+in the Authorization header, example:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Authorization: Bearer 25|uHHmnjkwrBvIMhOCJmnxxWAdK9tqh9kteP6KlJeu
+
+if that token is not sent, the /api/login endpoint will return a 401 Unauthorized response
+with a json body like:
+```
+{"message": "Unauthenticated"}
+```
+
+if that token belongs to a guest user, and if the email/password are valid credentials,
+the user will be logged in, this guest user id will be associated to the logged in account,
+and the authentication (encrypted)cookie will be replaced with the new data (logged_in token, user_id, guest = 0)
+
+
+if that token belongs to a non guest user, it means the user has already logged in
+and a 406 Not Acceptable response will be returned, with a json body like:
+```
+{"message": "already logged in"}
+```
