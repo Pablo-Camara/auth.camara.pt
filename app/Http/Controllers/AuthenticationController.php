@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\InteractsWithTime;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticationController extends Controller
 {
-
+    use InteractsWithTime;
     /**
      * Authenticates the user
      * if no auth token cookie, creates guest user and generates guest token
@@ -51,9 +53,14 @@ class AuthenticationController extends Controller
         $user = new User(['guest' => 1]);
         $user->save();
 
+        $guestTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['auth_token_cookie_lifetime']
+        );
+
         $userToken = $user->createToken(
             'guest_token',
-            ['guest']
+            ['guest'],
+            $guestTokenExpirationDatetime
         )->plainTextToken;
 
         $response->setContent([
@@ -130,9 +137,14 @@ class AuthenticationController extends Controller
         }, $userAbilities);
         $userAbilities = array_merge(['logged_in'], $userAbilities);
 
+        $userTokenExpirationDatetime = Carbon::now()->addRealMinutes(
+            $config['auth_token_cookie_lifetime']
+        );
+
         $userToken = $user->createToken(
             'stay_logged_in_token',
-            $userAbilities
+            $userAbilities,
+            $userTokenExpirationDatetime
         )->plainTextToken;
 
         // it is a guest logging in
