@@ -20,8 +20,7 @@ use App\Http\Controllers\AuthenticationController;
 });*/
 
 
-
-Route::get('/authenticate', [AuthenticationController::class, 'authenticationAttempt']);
+Route::post('/authenticate', [AuthenticationController::class, 'authenticationAttempt']);
 
 
 Route::post('/login', [AuthenticationController::class, 'loginAttempt'])
