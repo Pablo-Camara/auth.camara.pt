@@ -47,7 +47,8 @@ class AuthenticationController extends Controller
                 // if auth token is valid / not expired
                 // send the auth token from the cookie
                 $response->setContent([
-                    'at' => $authCookie['auth_token']
+                    'at' => $authCookie['auth_token'],
+                    'guest' => $authCookie['guest']
                 ]);
 
                 return $response;
@@ -76,7 +77,8 @@ class AuthenticationController extends Controller
         )->plainTextToken;
 
         $response->setContent([
-            'at' => $userToken
+            'at' => $userToken,
+            'guest' => 1
         ]);
 
         // creates new authCookie
