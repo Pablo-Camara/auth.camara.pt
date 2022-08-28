@@ -24,5 +24,5 @@ Route::post('/authenticate', [AuthenticationController::class, 'authenticationAt
 
 
 Route::post('/login', [AuthenticationController::class, 'loginAttempt'])
-        ->middleware(['auth:sanctum', 'abilities:guest'])
+        ->middleware(['auth:sanctum'])
         ->name('login-attempt');

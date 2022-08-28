@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Auth\AuthValidator;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Carbon\Carbon;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\InteractsWithTime;
 use Illuminate\Validation\ValidationException;
-use Laravel\Sanctum\PersonalAccessToken;
+use App\Helpers\Responses\AuthResponses;
 
 class AuthenticationController extends Controller
 {
@@ -35,11 +36,11 @@ class AuthenticationController extends Controller
         ) {
             $authCookie = decrypt($authCookie);
 
-            $isAuthCookieValid = $this->validateAuthCookie($authCookie);
+            $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
             $isAuthTokenValid = false;
 
             if($isAuthCookieValid) {
-                $isAuthTokenValid = $this->validateAuthToken($authCookie['auth_token']);
+                $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
             }
 
             if ($isAuthCookieValid && $isAuthTokenValid) {
@@ -117,23 +118,17 @@ class AuthenticationController extends Controller
         $authCookie = Cookie::get($config['auth_token_cookie_name']);
 
         // when logging in, users must always have an Auth Cookie (with guest token)
-
         if (is_null($authCookie)) {
-            return $response
-                    ->setContent([
-                        //TODO: translate msg str
-                        'message' => 'Unauthenticated'
-                    ])
-                    ->setStatusCode(401);
+            return AuthResponses::notAuthenticated();
         }
 
         $authCookie = decrypt($authCookie);
 
-        $isAuthCookieValid = $this->validateAuthCookie($authCookie);
+        $isAuthCookieValid = AuthValidator::validateAuthCookieDecryptedContent($authCookie);
         $isAuthTokenValid = false;
 
         if($isAuthCookieValid) {
-            $isAuthTokenValid = $this->validateAuthToken($authCookie['auth_token']);
+            $isAuthTokenValid = AuthValidator::validateAuthToken($authCookie['auth_token']);
         }
 
         if (
@@ -142,16 +137,15 @@ class AuthenticationController extends Controller
             // if auth cookie is valid
             // if auth token is valid / not expired
             // and the auth cookie is for a logged in user (non guest)
-            // lets tell the user he is already logged in
-            // and that his request is not acceptable!
+            // the user is already logged in
+            // lets return the current auth cookie data
 
             if ($authCookie['guest'] === 0) {
                 return $response
-                    ->setContent([
-                        //TODO: translate msg str
-                        'message' => 'already logged in'
-                    ])
-                    ->setStatusCode(406);
+                        ->setContent([
+                            'at' => $authCookie['auth_token'],
+                            'guest' => 0
+                        ]);
             }
         } else {
             // auth cookie or token is invalid
@@ -160,12 +154,7 @@ class AuthenticationController extends Controller
             // and lets forget this invalid auth cookie and/or token
             Cookie::forget($config['auth_token_cookie_name']);
 
-            return $response
-                ->setContent([
-                    //TODO: translate msg str
-                    'message' => 'Unauthenticated'
-                ])
-                ->setStatusCode(401);
+            return AuthResponses::notAuthenticated();
         }
 
         $request->validate([
@@ -228,73 +217,5 @@ class AuthenticationController extends Controller
                 'guest' => 0
             ])
             ->withCookie($authCookie);
-    }
-
-
-    /**
-     * Validate Auth Cookie decrypted content
-     * make sure content is an array
-     * make sure array has an auth_token
-     * make sure array has a guest flag
-     * make sure array has an user_id
-     *
-     * @param mixed $authCookie
-     * @return bool
-     */
-    private function validateAuthCookie($authCookie) : bool
-    {
-        // is the auth cookie decrypted content valid ?
-        if (
-            !is_array($authCookie)
-            ||
-            empty($authCookie['auth_token'])
-            ||
-            !isset($authCookie['guest'])
-            ||
-            !isset($authCookie['user_id'])
-            ) {
-            //invalid auth cookie data
-            //must be an array
-            //must contain auth_token
-            //must contain guest flag
-            //must contain user_id
-
-            return false;
-        }
-
-        return true;
-    }
-
-
-    /**
-     * Validate an Auth token
-     * makes sure token exists
-     * makes sure token is not expired
-     *
-     * @param ?string $authToken
-     * @return bool
-     */
-    private function validateAuthToken(?string $authToken) : bool {
-
-        // an empty or null string is an invalid token..
-        if (empty($authToken)) {
-            return false;
-        }
-
-        // does the auth_token still exist?
-        $personalAccessToken = PersonalAccessToken::findToken(
-            $authToken
-        );
-
-        if ($personalAccessToken) {
-            // is the auth_token still valid / not expired?
-            $hasTokenExpired = Carbon::now() >= $personalAccessToken->expires_at;
-
-            // if auth_token exists and is not expired it is valid
-            return false === $hasTokenExpired;
-        }
-
-        // if it no longer exists it is invalid
-        return false;
     }
 }

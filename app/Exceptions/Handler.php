@@ -3,7 +3,6 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Laravel\Sanctum\Exceptions\MissingAbilityException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -60,36 +59,6 @@ class Handler extends ExceptionHandler
     protected function shouldReturnJson($request, Throwable $e)
     {
         return true;
-    }
-
-
-    /**
-     * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $e
-     * @return \Symfony\Component\HttpFoundation\Response
-     *
-     * @throws \Throwable
-     */
-    public function render($request, Throwable $e)
-    {
-        if ($e instanceof MissingAbilityException) {
-            $abilities = $e->abilities();
-            if (
-                $request->routeIs('login-attempt')
-                &&
-                $abilities[0] === 'guest'
-            ) {
-                return response()->json([
-                    // TODO: translate
-                    'message' => 'already logged in',
-                   ], 406);
-            }
-
-        }
-
-        return parent::render($request, $e);
     }
 
 }
