@@ -165,10 +165,7 @@ class AuthenticationController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                //TODO: translations
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
+            return AuthResponses::incorrectCredentials();
         }
 
         $userAbilities = $user->abilities->all();
