@@ -116,49 +116,56 @@ class AuthenticationController extends Controller
 
         $authCookie = Cookie::get($config['auth_token_cookie_name']);
 
-        if (
-            !is_null($authCookie)
-        ) {
-            $authCookie = decrypt($authCookie);
+        // when logging in, users must always have an Auth Cookie (with guest token)
 
-            $isAuthCookieValid = $this->validateAuthCookie($authCookie);
-            $isAuthTokenValid = false;
-
-            if($isAuthCookieValid) {
-                $isAuthTokenValid = $this->validateAuthToken($authCookie['auth_token']);
-            }
-
-            if (
-                $isAuthCookieValid && $isAuthTokenValid
-            ) {
-                // if auth cookie is valid
-                // if auth token is valid / not expired
-                // and the auth cookie is for a logged in user (non guest)
-                // lets tell the user he is already logged in
-                // and that his request is not acceptable!
-
-                if ($authCookie['guest'] === 0) {
-                    return $response
-                        ->setContent([
-                            //TODO: translate msg str
-                            'message' => 'already logged in'
-                        ])
-                        ->setStatusCode(406);
-                }
-            } else {
-                // auth cookie or token is invalid
-                // lets forbid the login. Must authenticate as guest first.
-
-                // and lets forget this invalid auth cookie and/or token
-                Cookie::forget($config['auth_token_cookie_name']);
-
-                return $response
+        if (is_null($authCookie)) {
+            return $response
                     ->setContent([
                         //TODO: translate msg str
                         'message' => 'Unauthenticated'
                     ])
                     ->setStatusCode(401);
+        }
+
+        $authCookie = decrypt($authCookie);
+
+        $isAuthCookieValid = $this->validateAuthCookie($authCookie);
+        $isAuthTokenValid = false;
+
+        if($isAuthCookieValid) {
+            $isAuthTokenValid = $this->validateAuthToken($authCookie['auth_token']);
+        }
+
+        if (
+            $isAuthCookieValid && $isAuthTokenValid
+        ) {
+            // if auth cookie is valid
+            // if auth token is valid / not expired
+            // and the auth cookie is for a logged in user (non guest)
+            // lets tell the user he is already logged in
+            // and that his request is not acceptable!
+
+            if ($authCookie['guest'] === 0) {
+                return $response
+                    ->setContent([
+                        //TODO: translate msg str
+                        'message' => 'already logged in'
+                    ])
+                    ->setStatusCode(406);
             }
+        } else {
+            // auth cookie or token is invalid
+            // lets forbid the login. Must authenticate as guest first.
+
+            // and lets forget this invalid auth cookie and/or token
+            Cookie::forget($config['auth_token_cookie_name']);
+
+            return $response
+                ->setContent([
+                    //TODO: translate msg str
+                    'message' => 'Unauthenticated'
+                ])
+                ->setStatusCode(401);
         }
 
         $request->validate([
@@ -217,7 +224,8 @@ class AuthenticationController extends Controller
 
         return $response
             ->setContent([
-                'at' => $userToken
+                'at' => $userToken,
+                'guest' => 0
             ])
             ->withCookie($authCookie);
     }
