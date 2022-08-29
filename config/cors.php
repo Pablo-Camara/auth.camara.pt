@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*.camara.pt'],
+    'allowed_origins' => ['*.camara.pt', 'camara.pt'],
 
     'allowed_origins_patterns' => [],
 
