@@ -3,7 +3,7 @@
 namespace App\Helpers\Auth;
 
 use Carbon\Carbon;
-use Laravel\Sanctum\PersonalAccessToken;
+use App\Models\Sanctum\PersonalAccessToken;
 
 class AuthValidator {
 

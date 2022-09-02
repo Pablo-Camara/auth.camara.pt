@@ -10,7 +10,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\InteractsWithTime;
-use Illuminate\Validation\ValidationException;
 use App\Helpers\Responses\AuthResponses;
 
 class AuthenticationController extends Controller
